@@ -1,0 +1,59 @@
+{
+    "$schema":"http://json-schema.org/draft-07/schema#",
+    "$id": "http://setup/project.json",
+    "title": "Project",
+    "description": "Project schema",
+    "required": ["jobs", "tasks"],
+    "type": "object",
+    "properties": {
+        "jobs": {
+            "description": "Defines all available jobs",
+            "type": "object",
+            "additionalProperties": {
+                "description": "Defines a single job",
+                "type": "array",
+                "items": {
+                    "description": "Adds the task to this job",
+                    "type": "object",
+                    "required": ["task"],
+                    "properties": {
+                        "task": {
+                            "description": "Name of the task to be included in this job",
+                            "type": "string"
+                        },
+                        "args": {
+                            "description": "Arguments to pass to the task",
+                            "type": "array",
+                            "items": {
+                                "description": "Argument to pass to the task",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "tasks": {
+            "description": "Defines all tasks",
+            "type": "object",
+            "additionalProperties": {
+                "required": ["command"],
+                "command": {
+                    "description": "Command to execute",
+                    "type": "string"
+                },
+                "args": {
+                    "description": "Arguments to pass to the command",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "required_call_args": {
+                    "description": "Amount of arguments that must be passed to the command when calling the task from a job",
+                    "type": "number"
+                }
+            }
+        }
+    }
+}
