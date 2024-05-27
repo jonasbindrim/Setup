@@ -3,7 +3,6 @@ use clap::{Parser, Subcommand};
 #[derive(Parser)]
 #[clap(author, version, about)]
 pub struct CliParameters {
-
     /// Path to the project file. If ommited, `setup` tries to auto detect a project file.
     pub projectfile: Option<String>,
 

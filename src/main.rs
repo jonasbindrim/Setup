@@ -1,8 +1,10 @@
 use clap::Parser;
 use jsonschema::{Draft, JSONSchema};
-use modes::{run::run_mode, validate::validate_mode, list_jobs::list_jobs_mode, list_tasks::list_tasks_mode};
-use util::detect_project_file;
+use modes::{
+    list_jobs::list_jobs_mode, list_tasks::list_tasks_mode, run::run_mode, validate::validate_mode,
+};
 use std::sync::OnceLock;
+use util::detect_project_file;
 
 use cli::Mode;
 

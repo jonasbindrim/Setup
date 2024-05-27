@@ -1,4 +1,7 @@
-use crate::{schema::project::Project, util::{import_project_value, print_message, MessageSeverity}};
+use crate::{
+    schema::project::Project,
+    util::{import_project_value, print_message, MessageSeverity},
+};
 
 /// Executes run mode
 pub fn run_mode(projectfile: String, job: String) {
@@ -9,5 +12,8 @@ pub fn run_mode(projectfile: String, job: String) {
     // Execute job
     print_message(MessageSeverity::Info, format!("Executing job \"{}\"", job));
     project.execute_job(&job);
-    print_message(MessageSeverity::Success, format!("Job \"{}\" executed successfully", &job));
+    print_message(
+        MessageSeverity::Success,
+        format!("Job \"{}\" executed successfully", &job),
+    );
 }

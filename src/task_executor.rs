@@ -3,7 +3,8 @@ use std::process::{exit, Child, Command, ExitStatus};
 
 use crate::{
     errors::ExecutionError,
-    schema::{task::Task, task_call::TaskCall}, util::{print_message, MessageSeverity},
+    schema::{task::Task, task_call::TaskCall},
+    util::{print_message, MessageSeverity},
 };
 
 /// TaskExecutor is a struct that will be responsible for executing a single task.
@@ -37,7 +38,7 @@ impl TaskExecutor {
                             task.command,
                             required_call_args,
                             args.len()
-                        )
+                        ),
                     );
                     exit(1);
                 }
@@ -52,9 +53,8 @@ impl TaskExecutor {
                     MessageSeverity::Error,
                     format!(
                         "Task {} requires exactly {} additional arguments but 0 were provided",
-                        task.command,
-                        required_call_args,
-                    )
+                        task.command, required_call_args,
+                    ),
                 );
                 exit(1);
             }
