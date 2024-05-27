@@ -12,7 +12,7 @@ pub enum Mode {
     /// Check whether a given project file is valid in regards to the schema
     Validate {
         /// The path to the project file
-        projectfile: String, 
+        projectfile: String,
     },
     /// Execute a job from a project file
     Run {
@@ -20,5 +20,13 @@ pub enum Mode {
         projectfile: String,
         /// Name of the job to execute
         job: String,
-    }
+    },
+    ListJobs {
+        /// Path to the project file
+        projectfile: String,
+    },
+    ListTasks {
+        /// Path to the project file
+        projectfile: String,
+    },
 }
