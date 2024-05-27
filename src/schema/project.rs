@@ -5,13 +5,14 @@ use serde_json::Value;
 
 use crate::{task_executor::TaskExecutor, util::print_message, util::MessageSeverity, JSONSCHEMA};
 
-use super::{task::Task, task_call::TaskCall};
+use super::{settings::Settings, task::Task, task_call::TaskCall};
 
 type Job = Vec<TaskCall>;
 
 /// Represents the content of a `Project` from a configuration file
 #[derive(Serialize, Deserialize)]
 pub struct Project {
+    pub settings: Option<Settings>,
     pub jobs: HashMap<String, Job>,
     pub tasks: HashMap<String, Task>,
 }
@@ -46,7 +47,7 @@ impl Project {
     }
 
     /// Executes the job with the given name and therefore all tasks associated with that job
-    pub fn execute_job(&self, jobname: &str) {
+    pub fn execute_job(&self, jobname: &str, work_dir: Option<String>) {
         // Get the tasknames associated with the job
         let Some(taskcalls) = self.jobs.get(jobname) else {
             print_message(
@@ -66,7 +67,7 @@ impl Project {
                 exit(1);
             };
 
-            let mut task_executor = TaskExecutor::new(task, taskcall);
+            let mut task_executor = TaskExecutor::new(task, taskcall, &work_dir);
             task_executor.execute().unwrap_or_else(|err| {
                 print_message(
                     MessageSeverity::Error,

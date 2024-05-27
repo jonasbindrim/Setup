@@ -1,5 +1,8 @@
 use anyhow::Result;
-use std::process::{exit, Child, Command, ExitStatus};
+use std::{
+    path::Path,
+    process::{exit, Child, Command, ExitStatus},
+};
 
 use crate::{
     errors::ExecutionError,
@@ -16,7 +19,7 @@ pub struct TaskExecutor {
 
 impl TaskExecutor {
     /// Create a new TaskExecutor
-    pub fn new(task: &Task, taskcall: &TaskCall) -> TaskExecutor {
+    pub fn new(task: &Task, taskcall: &TaskCall, set_working_dir: &Option<String>) -> TaskExecutor {
         // Setup initial command
         let mut command: Command = Command::new(&task.command);
 
@@ -58,6 +61,12 @@ impl TaskExecutor {
                 );
                 exit(1);
             }
+        }
+
+        // Change working directory if needed
+        if let Some(dir) = set_working_dir {
+            let stem_path = Path::new(&dir).parent().unwrap();
+            command.current_dir(stem_path);
         }
 
         TaskExecutor {

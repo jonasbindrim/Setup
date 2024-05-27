@@ -23,14 +23,14 @@ fn main() {
     // Parse CLI arguments
     let args = cli::CliParameters::parse();
 
-    let project_file = args.projectfile.unwrap_or_else(detect_project_file);
+    let project_file_path = args.projectfile.unwrap_or_else(detect_project_file);
 
     // Execute the selected mode
     match args.mode {
-        Mode::Validate => validate_mode(project_file),
-        Mode::Run { job } => run_mode(project_file, job),
-        Mode::ListJobs => list_jobs_mode(project_file),
-        Mode::ListTasks => list_tasks_mode(project_file),
+        Mode::Validate => validate_mode(project_file_path),
+        Mode::Run { job } => run_mode(project_file_path, job),
+        Mode::ListJobs => list_jobs_mode(project_file_path),
+        Mode::ListTasks => list_tasks_mode(project_file_path),
     }
 }
 
