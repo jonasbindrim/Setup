@@ -3,30 +3,25 @@ use clap::{Parser, Subcommand};
 #[derive(Parser)]
 #[clap(author, version, about)]
 pub struct CliParameters {
+
+    /// Path to the project file. If ommited, `setup` tries to auto detect a project file.
+    pub projectfile: Option<String>,
+
     #[clap(subcommand)]
     pub mode: Mode,
 }
 
 #[derive(Subcommand)]
 pub enum Mode {
-    /// Check whether a given project file is valid in regards to the schema
-    Validate {
-        /// The path to the project file
-        projectfile: String,
-    },
-    /// Execute a job from a project file
+    /// Check whether the project is valid in regards to the schema
+    Validate,
+    /// Execute a job from the project
     Run {
-        /// Path to the project file
-        projectfile: String,
         /// Name of the job to execute
         job: String,
     },
-    ListJobs {
-        /// Path to the project file
-        projectfile: String,
-    },
-    ListTasks {
-        /// Path to the project file
-        projectfile: String,
-    },
+    /// Lists all available jobs in the project
+    ListJobs,
+    /// Lists all available tasks in the project
+    ListTasks,
 }
