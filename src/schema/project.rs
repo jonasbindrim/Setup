@@ -3,7 +3,7 @@ use std::{collections::HashMap, process::exit};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::{task_executor::TaskExecutor, util::print_message, JSONSCHEMA, util::MessageSeverity};
+use crate::{task_executor::TaskExecutor, util::print_message, util::MessageSeverity, JSONSCHEMA};
 
 use super::{task::Task, task_call::TaskCall};
 
@@ -23,11 +23,13 @@ impl Project {
         Self::validate_project(&project_data);
 
         // Convert project_data to Project
-        serde_json::from_value::<Project>(project_data)
-            .unwrap_or_else(|error| {
-                print_message(MessageSeverity::Error, format!("Error deserializing JSON \"{}\"", error));
-                exit(1);
-            })
+        serde_json::from_value::<Project>(project_data).unwrap_or_else(|error| {
+            print_message(
+                MessageSeverity::Error,
+                format!("Error deserializing JSON \"{}\"", error),
+            );
+            exit(1);
+        })
     }
 
     /// Validates a `Project` from a JSON string. Panics if the project is invalid.
@@ -35,7 +37,10 @@ impl Project {
         let schema = JSONSCHEMA.get().unwrap();
 
         if !schema.is_valid(project) {
-            print_message(MessageSeverity::Error, format!("Project data from does not match the json schema"));
+            print_message(
+                MessageSeverity::Error,
+                String::from("Project data from does not match the json schema"),
+            );
             exit(1);
         }
     }
@@ -44,27 +49,37 @@ impl Project {
     pub fn execute_job(&self, jobname: &str) {
         // Get the tasknames associated with the job
         let Some(taskcalls) = self.jobs.get(jobname) else {
-            print_message(MessageSeverity::Error, format!("Job with name \"{}\" not found", jobname));
+            print_message(
+                MessageSeverity::Error,
+                format!("Job with name \"{}\" not found", jobname),
+            );
             exit(1);
         };
 
         // Execute each task individually
         for taskcall in taskcalls.iter() {
             let Some(task) = self.tasks.get(&taskcall.task) else {
-                print_message(MessageSeverity::Error, format!("Task with name \"{}\" not found", taskcall.task));
+                print_message(
+                    MessageSeverity::Error,
+                    format!("Task with name \"{}\" not found", taskcall.task),
+                );
                 exit(1);
             };
 
             let mut task_executor = TaskExecutor::new(task, taskcall);
-            task_executor
-                .execute()
-                .unwrap_or_else(|err| {
-                    print_message(MessageSeverity::Error, format!("Error executing task \"{}\"", err));
-                    exit(1);
-                });
+            task_executor.execute().unwrap_or_else(|err| {
+                print_message(
+                    MessageSeverity::Error,
+                    format!("Error executing task \"{}\"", err),
+                );
+                exit(1);
+            });
 
             if !task_executor.wait().unwrap().success() {
-                print_message(MessageSeverity::Error, format!("Task \"{}\" failed", task.command));
+                print_message(
+                    MessageSeverity::Error,
+                    format!("Task \"{}\" failed", task.command),
+                );
                 exit(1);
             }
         }
