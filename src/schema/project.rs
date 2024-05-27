@@ -20,17 +20,22 @@ impl Project {
     /// Imports a `Project` from a JSON string
     pub fn import_project(project_data: &str) -> Project {
         // Validate project file against jsonschema
-        let schema = JSONSCHEMA.get().unwrap();
         let project_value = Value::from_str(project_data)
             .unwrap_or_else(|error| panic!("Error parsing JSON: {}", error));
-
-        if !schema.is_valid(&project_value) {
-            panic!("Project data does not match the json schema");
-        }
+        Self::validate_project(project_value);
 
         // Convert project_data to Project
         serde_json::from_str::<Project>(project_data)
             .unwrap_or_else(|error| panic!("Error deserializing JSON: {}", error))
+    }
+
+    /// Validates a `Project` from a JSON string. Panics if the project is invalid.
+    pub fn validate_project(project: Value) {
+        let schema = JSONSCHEMA.get().unwrap();
+
+        if !schema.is_valid(&project) {
+            panic!("Project data does not match the json schema");
+        }
     }
 
     /// Executes the job with the given name and therefore all tasks associated with that job
