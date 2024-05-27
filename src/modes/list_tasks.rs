@@ -1,4 +1,4 @@
-use crate::{schema::project::Project, util::import_project_value};
+use crate::{schema::project::Project, util::{import_project_value, print_message, MessageSeverity}};
 
 /// Executes list tasks mode
 pub fn list_tasks_mode(projectfile: String) {
@@ -7,8 +7,8 @@ pub fn list_tasks_mode(projectfile: String) {
     let project = Project::import_project(project_data);
 
     // List tasks
-    println!("Available tasks:");
+    print_message(MessageSeverity::Info, format!("Available tasks in project file \"{}\"", projectfile));
     for task in project.tasks.keys() {
-        println!("{}", task);
+        print_message(MessageSeverity::Info, format!("  - \"{}\"", task));
     }
 }

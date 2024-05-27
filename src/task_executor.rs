@@ -1,9 +1,9 @@
 use anyhow::Result;
-use std::process::{Child, Command, ExitStatus};
+use std::process::{exit, Child, Command, ExitStatus};
 
 use crate::{
     errors::ExecutionError,
-    schema::{task::Task, task_call::TaskCall},
+    schema::{task::Task, task_call::TaskCall}, util::{print_message, MessageSeverity},
 };
 
 /// TaskExecutor is a struct that will be responsible for executing a single task.
@@ -30,12 +30,16 @@ impl TaskExecutor {
         if let Some(args) = &taskcall.args {
             if let Some(required_call_args) = task.required_call_args {
                 if args.len() != required_call_args as usize {
-                    panic!(
-                        "Task {} requires exactly {} additional arguments but {} were provided",
-                        task.command,
-                        required_call_args,
-                        args.len()
+                    print_message(
+                        MessageSeverity::Error,
+                        format!(
+                            "Task {} requires exactly {} additional arguments but {} were provided",
+                            task.command,
+                            required_call_args,
+                            args.len()
+                        )
                     );
+                    exit(1);
                 }
             }
 
@@ -44,10 +48,15 @@ impl TaskExecutor {
             });
         } else if let Some(required_call_args) = task.required_call_args {
             if required_call_args > 0 {
-                panic!(
-                    "Task {} requires exactly {} additional arguments but 0 were provided",
-                    task.command, required_call_args
+                print_message(
+                    MessageSeverity::Error,
+                    format!(
+                        "Task {} requires exactly {} additional arguments but 0 were provided",
+                        task.command,
+                        required_call_args,
+                    )
                 );
+                exit(1);
             }
         }
 
