@@ -1,6 +1,7 @@
 use clap::Parser;
 use jsonschema::{Draft, JSONSchema};
 use modes::{run::run_mode, validate::validate_mode, list_jobs::list_jobs_mode, list_tasks::list_tasks_mode};
+use util::detect_project_file;
 use std::sync::OnceLock;
 
 use cli::Mode;
@@ -20,12 +21,14 @@ fn main() {
     // Parse CLI arguments
     let args = cli::CliParameters::parse();
 
+    let project_file = args.projectfile.unwrap_or_else(detect_project_file);
+
     // Execute the selected mode
     match args.mode {
-        Mode::Validate { projectfile } => validate_mode(projectfile),
-        Mode::Run { projectfile, job } => run_mode(projectfile, job),
-        Mode::ListJobs { projectfile } => list_jobs_mode(projectfile),
-        Mode::ListTasks { projectfile } => list_tasks_mode(projectfile),
+        Mode::Validate => validate_mode(project_file),
+        Mode::Run { job } => run_mode(project_file, job),
+        Mode::ListJobs => list_jobs_mode(project_file),
+        Mode::ListTasks => list_tasks_mode(project_file),
     }
 }
 
