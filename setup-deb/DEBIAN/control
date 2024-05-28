@@ -1,0 +1,6 @@
+Package: setup
+Version: 0.1-0
+Maintainer: JonasBindrim <jonas.bindrim@hotmail.de>
+Architecture: amd64
+Source: setup
+Description: CLI tool for script/program automation
