@@ -16,5 +16,8 @@ Cargo.lock
 # Generated mdbook files
 book/
 
+# VSCode configuration files
+.vscode/
+
 # Anything else
 temp/

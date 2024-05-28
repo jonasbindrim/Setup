@@ -9,7 +9,6 @@ use util::detect_project_file;
 use cli::Mode;
 
 mod cli;
-mod errors;
 mod modes;
 mod schema;
 mod task_executor;

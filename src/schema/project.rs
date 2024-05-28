@@ -3,11 +3,9 @@ use std::{collections::HashMap, process::exit};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::{task_executor::TaskExecutor, util::print_message, util::MessageSeverity, JSONSCHEMA};
+use crate::{util::print_message, util::MessageSeverity, JSONSCHEMA};
 
-use super::{settings::Settings, task::Task, task_call::TaskCall};
-
-type Job = Vec<TaskCall>;
+use super::{job::Job, settings::Settings, task::Task};
 
 /// Represents the content of a `Project` from a configuration file
 #[derive(Serialize, Deserialize)]
@@ -43,46 +41,6 @@ impl Project {
                 String::from("Project data from does not match the json schema"),
             );
             exit(1);
-        }
-    }
-
-    /// Executes the job with the given name and therefore all tasks associated with that job
-    pub fn execute_job(&self, jobname: &str, work_dir: Option<String>) {
-        // Get the tasknames associated with the job
-        let Some(taskcalls) = self.jobs.get(jobname) else {
-            print_message(
-                MessageSeverity::Error,
-                format!("Job with name \"{}\" not found", jobname),
-            );
-            exit(1);
-        };
-
-        // Execute each task individually
-        for taskcall in taskcalls.iter() {
-            let Some(task) = self.tasks.get(&taskcall.task) else {
-                print_message(
-                    MessageSeverity::Error,
-                    format!("Task with name \"{}\" not found", taskcall.task),
-                );
-                exit(1);
-            };
-
-            let mut task_executor = TaskExecutor::new(task, taskcall, &work_dir);
-            task_executor.execute().unwrap_or_else(|err| {
-                print_message(
-                    MessageSeverity::Error,
-                    format!("Error executing task \"{}\"", err),
-                );
-                exit(1);
-            });
-
-            if !task_executor.wait().unwrap().success() {
-                print_message(
-                    MessageSeverity::Error,
-                    format!("Task \"{}\" failed", task.command),
-                );
-                exit(1);
-            }
         }
     }
 }
