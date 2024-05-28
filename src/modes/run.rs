@@ -1,7 +1,9 @@
 use std::process::exit;
 
 use crate::{
-    schema::project::Project, task_executor::TaskExecutor, util::{import_project_value, print_message, MessageSeverity}
+    schema::project::Project,
+    task_executor::TaskExecutor,
+    util::{import_project_value, print_message, MessageSeverity},
 };
 
 /// Executes run mode
@@ -24,15 +26,12 @@ pub fn run_mode(projectfile: String, job: String) {
     print_message(MessageSeverity::Info, format!("Executing job \"{}\"", job));
     let failed = execute_job(&project, &job, work_dir);
     if failed {
-        print_message(
-            MessageSeverity::Error,
-            format!("Job \"{}\" failed", &job),
-        );
+        print_message(MessageSeverity::Error, format!("Job \"{}\" failed", &job));
     } else {
         print_message(
             MessageSeverity::Success,
             format!("Job \"{}\" executed successfully", &job),
-            );
+        );
     }
 }
 
@@ -72,7 +71,6 @@ fn execute_job(project: &Project, jobname: &str, work_dir: Option<String>) -> bo
 fn execute_sequential(task_executors: Vec<TaskExecutor>) -> bool {
     // Execute each `TaskExecutor` and wait for it to finish
     for mut executor in task_executors {
-        
         if !executor.execute() {
             exit(1);
         };
@@ -108,7 +106,7 @@ fn execute_parallel(mut task_executors: Vec<TaskExecutor>) -> bool {
     // Wait for all tasks to finish
     loop {
         let mut all_finished = true;
-        
+
         for (index, executor) in task_executors.iter_mut().enumerate() {
             if !task_status[index] {
                 all_finished = false;
@@ -125,12 +123,18 @@ fn execute_parallel(mut task_executors: Vec<TaskExecutor>) -> bool {
                             } else {
                                 print_message(
                                     MessageSeverity::Success,
-                                    format!("Task \"{}\" executed successfully", executor.task.command),
+                                    format!(
+                                        "Task \"{}\" executed successfully",
+                                        executor.task.command
+                                    ),
                                 );
                             }
                         }
-                    },
-                    Err(_) => print_message(MessageSeverity::Error, String::from("Something unexpected happened")),
+                    }
+                    Err(_) => print_message(
+                        MessageSeverity::Error,
+                        String::from("Something unexpected happened"),
+                    ),
                 }
             }
         }
@@ -140,5 +144,5 @@ fn execute_parallel(mut task_executors: Vec<TaskExecutor>) -> bool {
         }
     }
 
-    return task_failed
+    task_failed
 }
