@@ -21,22 +21,32 @@
             "type": "object",
             "additionalProperties": {
                 "description": "Defines a single job",
-                "type": "array",
-                "items": {
-                    "description": "Adds the task to this job",
-                    "type": "object",
-                    "required": ["task"],
-                    "properties": {
-                        "task": {
-                            "description": "Name of the task to be included in this job",
-                            "type": "string"
-                        },
-                        "args": {
-                            "description": "Arguments to pass to the task",
-                            "type": "array",
-                            "items": {
-                                "description": "Argument to pass to the task",
-                                "type": "string"
+                "type": "object",
+                "required": ["tasks"],
+                "properties": {
+                    "parallel": {
+                        "description": "Whether to run the tasks in parallel",
+                        "type": "boolean"
+                    },
+                    "tasks": {
+                        "type": "array",
+                        "items": {
+                            "description": "Adds the task to this job",
+                            "type": "object",
+                            "required": ["task"],
+                            "properties": {
+                                "task": {
+                                    "description": "Name of the task to be included in this job",
+                                    "type": "string"
+                                },
+                                "args": {
+                                    "description": "Arguments to pass to the task",
+                                    "type": "array",
+                                    "items": {
+                                        "description": "Argument to pass to the task",
+                                        "type": "string"
+                                    }
+                                }
                             }
                         }
                     }

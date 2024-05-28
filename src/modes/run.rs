@@ -1,6 +1,7 @@
+use std::process::exit;
+
 use crate::{
-    schema::project::Project,
-    util::{import_project_value, print_message, MessageSeverity},
+    schema::project::Project, task_executor::TaskExecutor, util::{import_project_value, print_message, MessageSeverity}
 };
 
 /// Executes run mode
@@ -11,14 +12,9 @@ pub fn run_mode(projectfile: String, job: String) {
 
     // Check working dir
     let work_dir: Option<String> = if let Some(settings) = &project.settings {
-        if let Some(value) = settings.project_file_as_work_dir {
-            if value {
-                Some(projectfile.clone())
-            } else {
-                None
-            }
-        } else {
-            None
+        match settings.project_file_as_work_dir {
+            Some(true) => Some(projectfile.clone()),
+            _ => None,
         }
     } else {
         None
@@ -26,9 +22,123 @@ pub fn run_mode(projectfile: String, job: String) {
 
     // Execute job
     print_message(MessageSeverity::Info, format!("Executing job \"{}\"", job));
-    project.execute_job(&job, work_dir);
-    print_message(
-        MessageSeverity::Success,
-        format!("Job \"{}\" executed successfully", &job),
-    );
+    let failed = execute_job(&project, &job, work_dir);
+    if failed {
+        print_message(
+            MessageSeverity::Error,
+            format!("Job \"{}\" failed", &job),
+        );
+    } else {
+        print_message(
+            MessageSeverity::Success,
+            format!("Job \"{}\" executed successfully", &job),
+            );
+    }
+}
+
+/// Executes the job with the given name and therefore all tasks associated with that job
+fn execute_job(project: &Project, jobname: &str, work_dir: Option<String>) -> bool {
+    // Get the tasknames associated with the job
+    let Some(job) = project.jobs.get(jobname) else {
+        print_message(
+            MessageSeverity::Error,
+            format!("Job with name \"{}\" not found", jobname),
+        );
+        exit(1);
+    };
+
+    // Build `TaskExecutor` instances for each task
+    let mut task_executors: Vec<TaskExecutor> = Vec::new();
+    for taskcall in job.tasks.iter() {
+        let Some(task) = project.tasks.get(&taskcall.task) else {
+            print_message(
+                MessageSeverity::Error,
+                format!("Task with name \"{}\" not found", taskcall.task),
+            );
+            exit(1);
+        };
+
+        task_executors.push(TaskExecutor::new(task, taskcall, &work_dir));
+    }
+
+    // Call executors functions
+    match job.parallel {
+        Some(true) => execute_parallel(task_executors),
+        _ => execute_sequential(task_executors),
+    }
+}
+
+/// Executes multiple tasks sequentially
+fn execute_sequential(task_executors: Vec<TaskExecutor>) -> bool {
+    // Execute each `TaskExecutor` and wait for it to finish
+    for mut executor in task_executors {
+        
+        if !executor.execute() {
+            exit(1);
+        };
+
+        if !executor.wait().unwrap().success() {
+            print_message(
+                MessageSeverity::Error,
+                format!("Task \"{}\" failed", executor.task.command),
+            );
+            exit(1);
+        } else {
+            print_message(
+                MessageSeverity::Success,
+                format!("Task \"{}\" executed successfully", executor.task.command),
+            );
+        }
+    }
+
+    false
+}
+
+/// Executes multiple tasks in parallel
+fn execute_parallel(mut task_executors: Vec<TaskExecutor>) -> bool {
+    // Store task status
+    let mut task_status: Vec<bool> = vec![false; task_executors.len()];
+    let mut task_failed = false;
+
+    // Execute each `TaskExecutor` without waiting for it to finish
+    for executor in &mut task_executors {
+        executor.execute();
+    }
+
+    // Wait for all tasks to finish
+    loop {
+        let mut all_finished = true;
+        
+        for (index, executor) in task_executors.iter_mut().enumerate() {
+            if !task_status[index] {
+                all_finished = false;
+                match executor.try_wait() {
+                    Ok(statuscode) => {
+                        if let Some(statuscode) = statuscode {
+                            task_status[index] = true;
+                            if !statuscode.success() {
+                                task_failed = true;
+                                print_message(
+                                    MessageSeverity::Error,
+                                    format!("Task \"{}\" failed", executor.task.command),
+                                );
+                            } else {
+                                print_message(
+                                    MessageSeverity::Success,
+                                    format!("Task \"{}\" executed successfully", executor.task.command),
+                                );
+                            }
+                        }
+                    },
+                    Err(_) => print_message(MessageSeverity::Error, String::from("Something unexpected happened")),
+                }
+            }
+        }
+
+        if all_finished {
+            break;
+        }
+    }
+
+    return task_failed
 }

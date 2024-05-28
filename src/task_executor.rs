@@ -1,18 +1,15 @@
-use anyhow::Result;
 use std::{
-    path::Path,
-    process::{exit, Child, Command, ExitStatus},
+    io, os::unix::process::ExitStatusExt, path::Path, process::{exit, Child, Command, ExitStatus}
 };
 
 use crate::{
-    errors::ExecutionError,
     schema::{task::Task, task_call::TaskCall},
     util::{print_message, MessageSeverity},
 };
 
 /// TaskExecutor is a struct that will be responsible for executing a single task.
 pub struct TaskExecutor {
-    task: Task,
+    pub task: Task,
     process: Command,
     child_process: Option<Child>,
 }
@@ -66,7 +63,9 @@ impl TaskExecutor {
         // Change working directory if needed
         if let Some(dir) = set_working_dir {
             let stem_path = Path::new(&dir).parent().unwrap();
-            command.current_dir(stem_path);
+            if stem_path.is_dir() {
+                command.current_dir(stem_path);
+            }
         }
 
         TaskExecutor {
@@ -77,21 +76,36 @@ impl TaskExecutor {
     }
 
     /// Executes the process and stores the child process
-    pub fn execute(&mut self) -> Result<()> {
-        let Ok(child) = self.process.spawn() else {
-            return Err(ExecutionError::SpawnError {
-                command: self.task.command.to_string(),
-            }
-            .into());
-        };
-
-        self.child_process = Some(child);
-        Ok(())
+    pub fn execute(&mut self) -> bool {
+        let child = self.process.spawn();
+        match child {
+            Ok(child) => {
+                self.child_process = Some(child);
+                return true
+            },
+            Err(error) => {
+                print_message(
+                    MessageSeverity::Error,
+                    format!("Error spawning process for task '{}' ({})", self.task.command, error),
+                );
+                return false
+            },
+        }
     }
 
     /// Waits for the child process to finish and returns the childs status code.
-    pub fn wait(&mut self) -> Result<ExitStatus> {
+    pub fn wait(&mut self) -> io::Result<ExitStatus> {
         let child = self.child_process.as_mut().unwrap();
         Ok(child.wait()?)
+    }
+
+    /// Tries to wait for the child process to finish and returns the childs status code.
+    /// This method does not actually wait for the child process to finish.
+    pub fn try_wait(&mut self) -> io::Result<Option<ExitStatus>> {
+        let Some(child) = self.child_process.as_mut() else {
+            return Ok(Some(ExitStatus::from_raw(1)))
+        };
+        
+        Ok(child.try_wait()?)
     }
 }
