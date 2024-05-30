@@ -1,49 +1,13 @@
 use clap::Parser;
-use jsonschema::{Draft, JSONSchema};
-use modes::{
-    list_jobs::list_jobs_mode, list_tasks::list_tasks_mode, run::run_mode, validate::validate_mode,
-};
-use std::sync::OnceLock;
-use util::detect_project_file;
 
-use cli::Mode;
+use setup::run;
+use setup::cli::CliParameters;
 
-mod cli;
-mod modes;
-mod schema;
-mod task_executor;
-mod util;
-
-pub static JSONSCHEMA: OnceLock<JSONSchema> = OnceLock::new();
+pub mod cli;
 
 fn main() {
-    load_jsonschema();
-
     // Parse CLI arguments
-    let args = cli::CliParameters::parse();
+    let args = CliParameters::parse();
 
-    let project_file_path = args.projectfile.unwrap_or_else(detect_project_file);
-
-    // Execute the selected mode
-    match args.mode {
-        Mode::Validate => validate_mode(project_file_path),
-        Mode::Run { job } => run_mode(project_file_path, job),
-        Mode::ListJobs => list_jobs_mode(project_file_path),
-        Mode::ListTasks => list_tasks_mode(project_file_path),
-    }
-}
-
-/// Loads the JSON schema from the jsonschema.json file
-fn load_jsonschema() {
-    // Setup JSONSCHEMA
-    let schema = include_str!("../jsonschema.json");
-    let schema = serde_json::from_str(schema).expect("Error parsing JSON schema");
-    let schema = JSONSchema::options()
-        .with_draft(Draft::Draft7)
-        .compile(&schema);
-
-    match schema {
-        Ok(final_schema) => JSONSCHEMA.set(final_schema).unwrap(),
-        Err(validation_error) => panic!("Error compiling JSON schema: {}", validation_error),
-    }
+    run(args);
 }
