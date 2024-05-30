@@ -21,4 +21,4 @@ book/
 
 # Anything else
 temp/
-deb-pack/bin/
+setup-deb/bin/
