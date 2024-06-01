@@ -1,5 +1,5 @@
 use anyhow::Result;
-use std::{path::Path, process::exit, str::FromStr};
+use std::{path::Path, str::FromStr};
 use termion::color;
 
 use serde_json::Value;
@@ -26,7 +26,7 @@ pub fn import_project_value(projectfile: &str) -> Result<Value> {
 }
 
 /// Tries to auto detect the project file
-pub fn detect_project_file() -> String {
+pub fn detect_project_file() -> Result<String> {
     print_message(
         MessageSeverity::Info,
         String::from("Trying to auto detect project file..."),
@@ -41,16 +41,13 @@ pub fn detect_project_file() -> String {
                 MessageSeverity::Success,
                 format!("Detected project file \"{}\"", path.display()),
             );
-            return path_to_check;
+            return Ok(path_to_check);
         } else {
             path_to_check = format!("../{}", path_to_check);
         }
     }
-    // print_message(
-    //     MessageSeverity::Error,
-    //     String::from("Could not auto detect project file"),
-    // );
-    exit(1);
+
+    Err(anyhow::anyhow!("Could not auto detect project file"))
 }
 
 /// Formats an error message with color

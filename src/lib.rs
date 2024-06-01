@@ -19,7 +19,10 @@ pub static JSONSCHEMA: OnceLock<JSONSchema> = OnceLock::new();
 pub fn run(args: CliParameters) -> Result<()> {
     load_jsonschema();
 
-    let project_file_path = args.projectfile.unwrap_or_else(detect_project_file);
+    let project_file_path = match args.projectfile {
+        Some(path) => path,
+        None => detect_project_file()?,
+    };
 
     // Execute the selected mode
     match args.mode {
