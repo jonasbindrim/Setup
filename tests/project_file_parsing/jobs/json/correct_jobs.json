@@ -1,0 +1,25 @@
+{
+    "jobs": {
+        "job1": {
+            "tasks": [
+                { "task": "test", "args": ["-v"] }
+            ],
+            "parallel": true
+        },
+        "job2": {
+            "tasks": [
+                { "task": "test", "args": ["-v"] },
+                { "task": "test" }
+            ]
+        },
+        "job3": {
+            "tasks": [
+                { "task": "test", "args": ["-v", "-c"] },
+                { "task": "test" },
+                { "task": "test2", "args": ["-v"] }
+            ],
+            "parallel": true
+        }
+    },
+    "tasks": {}
+}

@@ -1,0 +1,7 @@
+{
+    "settings": {
+        "some_random_non_existing_setting": "some_value"
+    },
+    "jobs": {},
+    "tasks": {}
+}

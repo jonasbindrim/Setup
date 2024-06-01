@@ -42,8 +42,8 @@ fn load_jsonschema() {
         .with_draft(Draft::Draft7)
         .compile(&schema);
 
-    match schema {
-        Ok(final_schema) => JSONSCHEMA.set(final_schema).unwrap(),
+    let _ = match schema {
+        Ok(final_schema) => JSONSCHEMA.set(final_schema),
         Err(validation_error) => panic!("Error compiling JSON schema: {}", validation_error),
-    }
+    };
 }
