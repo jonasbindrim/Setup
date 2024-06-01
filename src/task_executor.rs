@@ -1,14 +1,12 @@
+use anyhow::{anyhow, Result};
 use std::{
     io,
     os::unix::process::ExitStatusExt,
     path::Path,
-    process::{exit, Child, Command, ExitStatus},
+    process::{Child, Command, ExitStatus},
 };
 
-use crate::{
-    schema::{task::Task, task_call::TaskCall},
-    util::{print_message, MessageSeverity},
-};
+use crate::schema::{task::Task, task_call::TaskCall};
 
 /// TaskExecutor is a struct that will be responsible for executing a single task.
 pub struct TaskExecutor {
@@ -19,7 +17,11 @@ pub struct TaskExecutor {
 
 impl TaskExecutor {
     /// Create a new TaskExecutor
-    pub fn new(task: &Task, taskcall: &TaskCall, set_working_dir: &Option<String>) -> TaskExecutor {
+    pub fn new(
+        task: &Task,
+        taskcall: &TaskCall,
+        set_working_dir: &Option<String>,
+    ) -> Result<TaskExecutor> {
         // Setup initial command
         let mut command: Command = Command::new(&task.command);
 
@@ -34,16 +36,13 @@ impl TaskExecutor {
         if let Some(args) = &taskcall.args {
             if let Some(required_call_args) = task.required_call_args {
                 if args.len() != required_call_args as usize {
-                    print_message(
-                        MessageSeverity::Error,
-                        format!(
-                            "Task {} requires exactly {} additional arguments but {} were provided",
-                            task.command,
-                            required_call_args,
-                            args.len()
-                        ),
+                    let error_message = format!(
+                        "Task {} requires exactly {} additional arguments but {} were provided",
+                        task.command,
+                        required_call_args,
+                        args.len()
                     );
-                    exit(1);
+                    return Err(anyhow!(error_message));
                 }
             }
 
@@ -52,14 +51,11 @@ impl TaskExecutor {
             });
         } else if let Some(required_call_args) = task.required_call_args {
             if required_call_args > 0 {
-                print_message(
-                    MessageSeverity::Error,
-                    format!(
-                        "Task {} requires exactly {} additional arguments but 0 were provided",
-                        task.command, required_call_args,
-                    ),
+                let error_message = format!(
+                    "Task {} requires exactly {} additional arguments but 0 were provided",
+                    task.command, required_call_args,
                 );
-                exit(1);
+                return Err(anyhow!(error_message));
             }
         }
 
@@ -71,30 +67,27 @@ impl TaskExecutor {
             }
         }
 
-        TaskExecutor {
+        Ok(TaskExecutor {
             task: task.clone(),
             process: command,
             child_process: None,
-        }
+        })
     }
 
     /// Executes the process and stores the child process
-    pub fn execute(&mut self) -> bool {
+    pub fn execute(&mut self) -> Result<()> {
         let child = self.process.spawn();
         match child {
             Ok(child) => {
                 self.child_process = Some(child);
-                true
+                Ok(())
             }
             Err(error) => {
-                print_message(
-                    MessageSeverity::Error,
-                    format!(
-                        "Error spawning process for task '{}' ({})",
-                        self.task.command, error
-                    ),
+                let error_message = format!(
+                    "Cannot spawn process for task '{}' ({})",
+                    self.task.command, error
                 );
-                false
+                Err(anyhow!(error_message))
             }
         }
     }

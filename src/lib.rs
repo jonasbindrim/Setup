@@ -1,3 +1,4 @@
+use anyhow::Result;
 use jsonschema::{Draft, JSONSchema};
 use modes::{
     list_jobs::list_jobs_mode, list_tasks::list_tasks_mode, run::run_mode, validate::validate_mode,
@@ -11,11 +12,11 @@ pub mod cli;
 mod modes;
 mod schema;
 mod task_executor;
-mod util;
+pub mod util;
 
 pub static JSONSCHEMA: OnceLock<JSONSchema> = OnceLock::new();
 
-pub fn run(args: CliParameters) {
+pub fn run(args: CliParameters) -> Result<()> {
     load_jsonschema();
 
     let project_file_path = args.projectfile.unwrap_or_else(detect_project_file);
@@ -23,9 +24,9 @@ pub fn run(args: CliParameters) {
     // Execute the selected mode
     match args.mode {
         Mode::Validate => validate_mode(project_file_path),
-        Mode::Run { job } => run_mode(project_file_path, job),
-        Mode::ListJobs => list_jobs_mode(project_file_path),
         Mode::ListTasks => list_tasks_mode(project_file_path),
+        Mode::ListJobs => list_jobs_mode(project_file_path),
+        Mode::Run { job } => run_mode(project_file_path, job),
     }
 }
 

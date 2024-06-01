@@ -1,13 +1,22 @@
+use std::process::ExitCode;
+
 use clap::Parser;
 
-use setup::run;
 use setup::cli::CliParameters;
+use setup::run;
+use setup::util::format_error;
 
 pub mod cli;
 
-fn main() {
+fn main() -> ExitCode {
     // Parse CLI arguments
     let args = CliParameters::parse();
 
-    run(args);
+    match run(args) {
+        Ok(_) => ExitCode::SUCCESS,
+        Err(error) => {
+            eprintln!("{}", format_error(format!("{}", error)));
+            ExitCode::FAILURE
+        }
+    }
 }

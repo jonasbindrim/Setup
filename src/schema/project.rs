@@ -1,9 +1,10 @@
-use std::{collections::HashMap, process::exit};
+use std::collections::HashMap;
 
+use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::{util::print_message, util::MessageSeverity, JSONSCHEMA};
+use crate::JSONSCHEMA;
 
 use super::{job::Job, settings::Settings, task::Task};
 
@@ -17,30 +18,27 @@ pub struct Project {
 
 impl Project {
     /// Imports a `Project` from a JSON string
-    pub fn import_project(project_data: Value) -> Project {
+    pub fn import_project(project_data: Value) -> Result<Project> {
         // Validate project file against jsonschema
-        Self::validate_project(&project_data);
+        Self::validate_project(&project_data)?;
 
         // Convert project_data to Project
-        serde_json::from_value::<Project>(project_data).unwrap_or_else(|error| {
-            print_message(
-                MessageSeverity::Error,
-                format!("Error deserializing JSON \"{}\"", error),
-            );
-            exit(1);
-        })
+        match serde_json::from_value::<Project>(project_data) {
+            Ok(project) => Ok(project),
+            Err(error) => Err(anyhow!(format!("Error deserializing JSON \"{}\"", error))),
+        }
     }
 
     /// Validates a `Project` from a JSON string. Panics if the project is invalid.
-    pub fn validate_project(project: &Value) {
+    pub fn validate_project(project: &Value) -> Result<()> {
         let schema = JSONSCHEMA.get().unwrap();
 
         if !schema.is_valid(project) {
-            print_message(
-                MessageSeverity::Error,
-                String::from("Project data from does not match the json schema"),
-            );
-            exit(1);
+            Err(anyhow!(String::from(
+                "Project data from does not match the json schema"
+            )))
+        } else {
+            Ok(())
         }
     }
 }
