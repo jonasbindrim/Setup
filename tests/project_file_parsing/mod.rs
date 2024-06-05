@@ -1,5 +1,5 @@
-mod settings;
 mod jobs;
+mod settings;
 mod tasks;
 
 use setup::{

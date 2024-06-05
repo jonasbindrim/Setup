@@ -19,6 +19,11 @@ pub enum Mode {
         /// Name of the job to execute
         job: String,
     },
+    /// Execute a single task from the project
+    RunTask {
+        task: String,
+        arguments: Vec<String>,
+    },
     /// Lists all available jobs in the project
     ListJobs,
     /// Lists all available tasks in the project
