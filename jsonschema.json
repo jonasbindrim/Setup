@@ -9,6 +9,7 @@
         "settings": {
             "description": "Project settings",
             "type": "object",
+            "additionalProperties": false,
             "properties": {
                 "project_file_as_work_dir": {
                     "description": "Whether to use the project file's directory as the working directory",

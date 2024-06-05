@@ -1,0 +1,20 @@
+{
+    "jobs": {},
+    "tasks": {
+        "task1": {
+            "command": "ls"
+        },
+        "task2": {
+            "command": "ls",
+            "args": ["-l"]
+        },
+        "task3": {
+            "command": "ls",
+            "args": []
+        },
+        "task4": {
+            "command": "ls",
+            "required_call_args": 1
+        }
+    }
+}
