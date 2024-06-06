@@ -21,4 +21,4 @@ book/
 
 # Anything else
 temp/
-setup-deb/bin/
+*.deb
