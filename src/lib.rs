@@ -1,7 +1,8 @@
 use anyhow::Result;
 use jsonschema::{Draft, JSONSchema};
 use modes::{
-    list_jobs::list_jobs_mode, list_tasks::list_tasks_mode, run::run_mode, validate::validate_mode,
+    list_jobs::list_jobs_mode, list_tasks::list_tasks_mode, run_job::run_job_mode,
+    run_task::run_task_mode, validate::validate_mode,
 };
 use std::sync::OnceLock;
 use util::detect_project_file;
@@ -29,7 +30,8 @@ pub fn run(args: CliParameters) -> Result<()> {
         Mode::Validate => validate_mode(project_file_path),
         Mode::ListTasks => list_tasks_mode(project_file_path),
         Mode::ListJobs => list_jobs_mode(project_file_path),
-        Mode::Run { job } => run_mode(project_file_path, job),
+        Mode::Run { job } => run_job_mode(project_file_path, job),
+        Mode::RunTask { task, arguments } => run_task_mode(project_file_path, task, arguments),
     }
 }
 

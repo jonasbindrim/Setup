@@ -46,9 +46,7 @@ impl TaskExecutor {
                 }
             }
 
-            args.iter().for_each(|arg| {
-                command.arg(arg);
-            });
+            command.args(args);
         } else if let Some(required_call_args) = task.required_call_args {
             if required_call_args > 0 {
                 let error_message = format!(

@@ -6,8 +6,8 @@ use crate::{
     util::{format_error, import_project_value, print_message, MessageSeverity},
 };
 
-/// Executes run mode
-pub fn run_mode(projectfile: String, job: String) -> Result<()> {
+/// Executes run job mode
+pub fn run_job_mode(projectfile: String, job: String) -> Result<()> {
     // Import project file
     let project_data = import_project_value(&projectfile)?;
     let project = Project::import_project(project_data)?;
