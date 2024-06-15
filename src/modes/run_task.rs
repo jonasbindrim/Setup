@@ -1,3 +1,5 @@
+use std::process::ExitStatus;
+
 use anyhow::{anyhow, Result};
 
 use crate::{
@@ -83,5 +85,20 @@ fn execute_task(
 
     // Build `TaskExecutor` instance
     let mut task_executor = TaskExecutor::new(task, &taskcall, &work_dir)?;
-    task_executor.execute()
+    task_executor.execute()?;
+
+    let status = task_executor.wait()?;
+    if !ExitStatus::success(&status) {
+        return Err(anyhow!(format!(
+            "Task \"{}\" failed with exit code {}",
+            task.command,
+            if let Some(status) = status.code() {
+                status.to_string()
+            } else {
+                "unknown".to_string()
+            }
+        )));
+    }
+
+    Ok(())
 }
