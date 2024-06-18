@@ -27,30 +27,57 @@ pub fn run_task_mode(projectfile: String, task: String, arguments: Vec<String>) 
     // Execute task
     print_message(
         MessageSeverity::Info,
-        format!("Executing task \"{}\"", task),
+        format!("Executing task with name \"{}\"", task),
     );
-    match execute_task(&project, &task, arguments, work_dir) {
+
+    let mut task_executor = match build_executor(&project, &task, arguments, work_dir) {
+        Ok(executor) => executor,
+        Err(error) => {
+            eprintln!("{}", format_error(format!("{}", error)));
+            return Err(anyhow!(format!("Task \"{}\" failed", &task)));
+        }
+    };
+    
+    match execute_task(&mut task_executor) {
         Ok(()) => {
             print_message(
                 MessageSeverity::Success,
-                format!("Task \"{}\" executed successfully", &task),
+                format!("Task \"{}\" executed successfully", &task_executor.execution_string),
             );
             Ok(())
         }
         Err(error) => {
             eprintln!("{}", format_error(format!("{}", error)));
-            Err(anyhow!(format!("Task \"{}\" failed", &task)))
+            Err(anyhow!(format!("Task \"{}\" failed", &task_executor.execution_string)))
         }
     }
 }
 
 /// Executes the task with the given name
 fn execute_task(
-    project: &Project,
-    taskname: &str,
-    arguments: Vec<String>,
-    work_dir: Option<String>,
+    task_executor: &mut TaskExecutor,
 ) -> Result<()> {
+
+    task_executor.execute()?;
+
+    let status = task_executor.wait()?;
+    if !ExitStatus::success(&status) {
+        return Err(anyhow!(format!(
+            "Task \"{}\" failed with exit code {}",
+            task_executor.execution_string,
+            if let Some(status) = status.code() {
+                status.to_string()
+            } else {
+                "unknown".to_string()
+            }
+        )));
+    }
+
+    Ok(())
+}
+
+/// Builds the task executor
+fn build_executor(project: &Project, taskname: &str, arguments: Vec<String>, work_dir: Option<String>) -> Result<TaskExecutor> {
     // Get the task
     let Some(task) = project.tasks.get(taskname) else {
         return Err(anyhow!(format!(
@@ -84,21 +111,5 @@ fn execute_task(
     };
 
     // Build `TaskExecutor` instance
-    let mut task_executor = TaskExecutor::new(task, &taskcall, &work_dir)?;
-    task_executor.execute()?;
-
-    let status = task_executor.wait()?;
-    if !ExitStatus::success(&status) {
-        return Err(anyhow!(format!(
-            "Task \"{}\" failed with exit code {}",
-            task.command,
-            if let Some(status) = status.code() {
-                status.to_string()
-            } else {
-                "unknown".to_string()
-            }
-        )));
-    }
-
-    Ok(())
+    TaskExecutor::new(task, &taskcall, &work_dir)
 }

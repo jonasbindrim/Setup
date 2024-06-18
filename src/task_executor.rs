@@ -6,13 +6,14 @@ use std::{
     process::{Child, Command, ExitStatus},
 };
 
-use crate::schema::{task::Task, task_call::TaskCall};
+use crate::{schema::{task::Task, task_call::TaskCall}, util::{print_message, MessageSeverity}};
 
 /// TaskExecutor is a struct that will be responsible for executing a single task.
 pub struct TaskExecutor {
     pub task: Task,
     process: Command,
     child_process: Option<Child>,
+    pub execution_string: String,
 }
 
 impl TaskExecutor {
@@ -22,13 +23,17 @@ impl TaskExecutor {
         taskcall: &TaskCall,
         set_working_dir: &Option<String>,
     ) -> Result<TaskExecutor> {
+        let mut execution_command = String::new();
+
         // Setup initial command
         let mut command: Command = Command::new(&task.command);
+        execution_command.push_str(&task.command);
 
         // Add task arguments
         if let Some(args) = &task.args {
+            command.args(args);
             args.iter().for_each(|arg| {
-                command.arg(arg);
+                execution_command.push_str(format!(" {}", arg).as_str());
             });
         }
 
@@ -47,6 +52,9 @@ impl TaskExecutor {
             }
 
             command.args(args);
+            args.iter().for_each(|arg| {
+                execution_command.push_str(format!(" {}", arg).as_str());
+            });
         } else if let Some(required_call_args) = task.required_call_args {
             if required_call_args > 0 {
                 let error_message = format!(
@@ -69,6 +77,7 @@ impl TaskExecutor {
             task: task.clone(),
             process: command,
             child_process: None,
+            execution_string: execution_command,
         })
     }
 
@@ -77,6 +86,10 @@ impl TaskExecutor {
         let child = self.process.spawn();
         match child {
             Ok(child) => {
+                print_message(
+                    MessageSeverity::Info,
+                    format!("Executing task \"{}\"...", self.execution_string),
+                );
                 self.child_process = Some(child);
                 Ok(())
             }
