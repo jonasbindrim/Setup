@@ -6,7 +6,10 @@ use std::{
     process::{Child, Command, ExitStatus},
 };
 
-use crate::{schema::{task::Task, task_call::TaskCall}, util::{print_message, MessageSeverity}};
+use crate::{
+    schema::{task::Task, task_call::TaskCall},
+    util::{print_message, MessageSeverity},
+};
 
 /// TaskExecutor is a struct that will be responsible for executing a single task.
 pub struct TaskExecutor {

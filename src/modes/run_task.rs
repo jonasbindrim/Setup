@@ -37,27 +37,30 @@ pub fn run_task_mode(projectfile: String, task: String, arguments: Vec<String>) 
             return Err(anyhow!(format!("Task \"{}\" failed", &task)));
         }
     };
-    
+
     match execute_task(&mut task_executor) {
         Ok(()) => {
             print_message(
                 MessageSeverity::Success,
-                format!("Task \"{}\" executed successfully", &task_executor.execution_string),
+                format!(
+                    "Task \"{}\" executed successfully",
+                    &task_executor.execution_string
+                ),
             );
             Ok(())
         }
         Err(error) => {
             eprintln!("{}", format_error(format!("{}", error)));
-            Err(anyhow!(format!("Task \"{}\" failed", &task_executor.execution_string)))
+            Err(anyhow!(format!(
+                "Task \"{}\" failed",
+                &task_executor.execution_string
+            )))
         }
     }
 }
 
 /// Executes the task with the given name
-fn execute_task(
-    task_executor: &mut TaskExecutor,
-) -> Result<()> {
-
+fn execute_task(task_executor: &mut TaskExecutor) -> Result<()> {
     task_executor.execute()?;
 
     let status = task_executor.wait()?;
@@ -77,7 +80,12 @@ fn execute_task(
 }
 
 /// Builds the task executor
-fn build_executor(project: &Project, taskname: &str, arguments: Vec<String>, work_dir: Option<String>) -> Result<TaskExecutor> {
+fn build_executor(
+    project: &Project,
+    taskname: &str,
+    arguments: Vec<String>,
+    work_dir: Option<String>,
+) -> Result<TaskExecutor> {
     // Get the task
     let Some(task) = project.tasks.get(taskname) else {
         return Err(anyhow!(format!(

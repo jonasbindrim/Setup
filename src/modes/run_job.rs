@@ -80,7 +80,10 @@ fn execute_sequential(task_executors: Vec<TaskExecutor>) -> Result<()> {
         } else {
             print_message(
                 MessageSeverity::Success,
-                format!("Task \"{}\" executed successfully", executor.execution_string),
+                format!(
+                    "Task \"{}\" executed successfully",
+                    executor.execution_string
+                ),
             );
         }
     }
