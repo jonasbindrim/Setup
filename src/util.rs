@@ -64,14 +64,26 @@ pub fn format_error(error: String) -> String {
 pub fn print_message(severity: MessageSeverity, message: String) {
     match severity {
         MessageSeverity::Info => println!(
-            "{}[INFO]   :{} {}",
+            "{}[INFO]    :{} {}",
             color::Fg(color::Blue),
             color::Fg(color::Reset),
             message
         ),
         MessageSeverity::Success => println!(
-            "{}[SUCCESS]:{} {}",
+            "{}[SUCCESS] :{} {}",
             color::Fg(color::Green),
+            color::Fg(color::Reset),
+            message
+        ),
+        MessageSeverity::ChildInfo => println!(
+            "{}[CHILDI]  :{} {}",
+            color::Fg(color::Yellow),
+            color::Fg(color::Reset),
+            message
+        ),
+        MessageSeverity::ChildError => println!(
+            "{}[CHILDERR]:{} {}",
+            color::Fg(color::Red),
             color::Fg(color::Reset),
             message
         ),
@@ -82,4 +94,6 @@ pub fn print_message(severity: MessageSeverity, message: String) {
 pub enum MessageSeverity {
     Info,
     Success,
+    ChildInfo,
+    ChildError,
 }

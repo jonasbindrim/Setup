@@ -1,9 +1,10 @@
 use anyhow::{anyhow, Result};
 use std::{
-    io,
+    io::{self, BufRead, BufReader},
     os::unix::process::ExitStatusExt,
     path::Path,
-    process::{Child, Command, ExitStatus},
+    process::{Child, Command, ExitStatus, Stdio},
+    thread::{self, JoinHandle},
 };
 
 use crate::{
@@ -14,9 +15,11 @@ use crate::{
 /// TaskExecutor is a struct that will be responsible for executing a single task.
 pub struct TaskExecutor {
     pub task: Task,
+    pub execution_string: String,
     process: Command,
     child_process: Option<Child>,
-    pub execution_string: String,
+    err_reader_handle: Option<JoinHandle<()>>,
+    out_reader_handle: Option<JoinHandle<()>>,
 }
 
 impl TaskExecutor {
@@ -76,11 +79,16 @@ impl TaskExecutor {
             }
         }
 
+        command.stdout(Stdio::piped());
+        command.stderr(Stdio::piped());
+
         Ok(TaskExecutor {
             task: task.clone(),
             process: command,
             child_process: None,
             execution_string: execution_command,
+            err_reader_handle: None,
+            out_reader_handle: None,
         })
     }
 
@@ -88,12 +96,15 @@ impl TaskExecutor {
     pub fn execute(&mut self) -> Result<()> {
         let child = self.process.spawn();
         match child {
-            Ok(child) => {
+            Ok(mut child) => {
                 print_message(
                     MessageSeverity::Info,
                     format!("Executing task \"{}\"...", self.execution_string),
                 );
+
+                self.bind_output(&mut child);
                 self.child_process = Some(child);
+
                 Ok(())
             }
             Err(error) => {
@@ -106,10 +117,43 @@ impl TaskExecutor {
         }
     }
 
+    /// Binds stdout and stderr to the given output and prefixes both with the given prefix.
+    fn bind_output(&mut self, child: &mut Child) {
+        let stdout = child.stdout.take().expect("Unable to take child stdout");
+        let stderr = child.stderr.take().expect("Unable to take child stderr");
+
+        let out_reader = BufReader::new(stdout);
+        let err_reader = BufReader::new(stderr);
+
+        let out_reader_execution_string = self.execution_string.clone();
+        self.out_reader_handle = Some(thread::spawn(move || {
+            for line in out_reader.lines().map_while(Result::ok) {
+                print_message(
+                    MessageSeverity::ChildInfo,
+                    format!("{} -> {}", out_reader_execution_string, line),
+                );
+            }
+        }));
+
+        let err_reader_execution_string = self.execution_string.clone();
+        self.err_reader_handle = Some(thread::spawn(move || {
+            for line in err_reader.lines().map_while(Result::ok) {
+                print_message(
+                    MessageSeverity::ChildError,
+                    format!("{} -> {}", err_reader_execution_string, line),
+                );
+            }
+        }));
+    }
+
     /// Waits for the child process to finish and returns the childs status code.
     pub fn wait(&mut self) -> io::Result<ExitStatus> {
         let child = self.child_process.as_mut().unwrap();
-        child.wait()
+        let exitstate = child.wait()?;
+        self.out_reader_handle.take().unwrap().join().unwrap();
+        self.err_reader_handle.take().unwrap().join().unwrap();
+
+        Ok(exitstate)
     }
 
     /// Tries to wait for the child process to finish and returns the childs status code.
@@ -119,6 +163,12 @@ impl TaskExecutor {
             return Ok(Some(ExitStatus::from_raw(1)));
         };
 
-        child.try_wait()
+        let exitstatus = child.try_wait()?;
+        if exitstatus.is_some() {
+            self.out_reader_handle.take().unwrap().join().unwrap();
+            self.err_reader_handle.take().unwrap().join().unwrap();
+        }
+
+        Ok(exitstatus)
     }
 }
