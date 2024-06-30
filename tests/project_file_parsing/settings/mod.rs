@@ -12,6 +12,7 @@ fn empty_settings_test() {
 
     let cli_args = CliParameters {
         projectfile: Some(project_file_path),
+        silent_children: None,
         mode: Mode::Validate,
     };
 
@@ -26,6 +27,7 @@ fn complete_settings_test() {
 
     let cli_args = CliParameters {
         projectfile: Some(project_file_path),
+        silent_children: None,
         mode: Mode::Validate,
     };
 
@@ -40,6 +42,7 @@ fn wrong_settings_entry_test() {
 
     let cli_args = CliParameters {
         projectfile: Some(project_file_path),
+        silent_children: None,
         mode: Mode::Validate,
     };
 

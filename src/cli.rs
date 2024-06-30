@@ -6,6 +6,10 @@ pub struct CliParameters {
     /// Path to the project file. If ommited, `setup` tries to auto detect a project file.
     pub projectfile: Option<String>,
 
+    /// Flag to run in silent mode. Supresses all output from child processes.
+    #[clap(short, long)]
+    pub silent_children: Option<bool>,
+
     #[clap(subcommand)]
     pub mode: Mode,
 }
@@ -21,8 +25,12 @@ pub enum Mode {
     },
     /// Execute a single task from the project
     RunTask {
+        /// Name of the task to execute
         task: String,
+
+        /// Additional arguments for the task
         arguments: Vec<String>,
+
     },
     /// Lists all available jobs in the project
     ListJobs,

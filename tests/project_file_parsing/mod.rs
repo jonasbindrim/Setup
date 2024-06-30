@@ -17,6 +17,7 @@ fn minimal_project_file_test() {
     let cli_args = CliParameters {
         projectfile: Some(project_file_path),
         mode: Mode::Validate,
+        silent_children: None,
     };
 
     let validation_result = run(cli_args);
