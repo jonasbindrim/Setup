@@ -12,6 +12,7 @@ fn correct_tasks_test() {
 
     let cli_args = CliParameters {
         projectfile: Some(project_file_path),
+        silent_children: None,
         mode: Mode::Validate,
     };
 
@@ -26,6 +27,7 @@ fn missing_command_test() {
 
     let cli_args = CliParameters {
         projectfile: Some(project_file_path),
+        silent_children: None,
         mode: Mode::Validate,
     };
 

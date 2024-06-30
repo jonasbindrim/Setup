@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
 use std::{
-    io::{self, BufRead, BufReader},
+    io::{BufRead, BufReader},
     os::unix::process::ExitStatusExt,
     path::Path,
     process::{Child, Command, ExitStatus, Stdio},
@@ -18,6 +18,7 @@ pub struct TaskExecutor {
     pub execution_string: String,
     process: Command,
     child_process: Option<Child>,
+    silent_children: bool,
     err_reader_handle: Option<JoinHandle<()>>,
     out_reader_handle: Option<JoinHandle<()>>,
 }
@@ -28,6 +29,7 @@ impl TaskExecutor {
         task: &Task,
         taskcall: &TaskCall,
         set_working_dir: &Option<String>,
+        silent_children: bool,
     ) -> Result<TaskExecutor> {
         let mut execution_command = String::new();
 
@@ -89,6 +91,7 @@ impl TaskExecutor {
             execution_string: execution_command,
             err_reader_handle: None,
             out_reader_handle: None,
+            silent_children,
         })
     }
 
@@ -102,7 +105,10 @@ impl TaskExecutor {
                     format!("Executing task \"{}\"...", self.execution_string),
                 );
 
-                self.bind_output(&mut child);
+                if !self.silent_children {
+                    self.bind_output(&mut child);
+                }
+
                 self.child_process = Some(child);
 
                 Ok(())
@@ -147,7 +153,7 @@ impl TaskExecutor {
     }
 
     /// Waits for the child process to finish and returns the childs status code.
-    pub fn wait(&mut self) -> io::Result<ExitStatus> {
+    pub fn wait(&mut self) -> Result<ExitStatus> {
         let child = self.child_process.as_mut().unwrap();
         let exitstate = child.wait()?;
         self.out_reader_handle.take().unwrap().join().unwrap();
@@ -158,7 +164,7 @@ impl TaskExecutor {
 
     /// Tries to wait for the child process to finish and returns the childs status code.
     /// This method does not actually wait for the child process to finish.
-    pub fn try_wait(&mut self) -> io::Result<Option<ExitStatus>> {
+    pub fn try_wait(&mut self) -> Result<Option<ExitStatus>> {
         let Some(child) = self.child_process.as_mut() else {
             return Ok(Some(ExitStatus::from_raw(1)));
         };

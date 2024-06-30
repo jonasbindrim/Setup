@@ -12,6 +12,7 @@ fn correct_jobs_test() {
 
     let cli_args = CliParameters {
         projectfile: Some(project_file_path),
+        silent_children: None,
         mode: Mode::Validate,
     };
 
@@ -26,6 +27,7 @@ fn missing_task_in_taskcall_test() {
 
     let cli_args = CliParameters {
         projectfile: Some(project_file_path),
+        silent_children: None,
         mode: Mode::Validate,
     };
 

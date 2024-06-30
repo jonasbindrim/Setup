@@ -30,8 +30,18 @@ pub fn run(args: CliParameters) -> Result<()> {
         Mode::Validate => validate_mode(project_file_path),
         Mode::ListTasks => list_tasks_mode(project_file_path),
         Mode::ListJobs => list_jobs_mode(project_file_path),
-        Mode::Run { job } => run_job_mode(project_file_path, job),
-        Mode::RunTask { task, arguments } => run_task_mode(project_file_path, task, arguments),
+        Mode::Run {
+            job,
+        } => run_job_mode(project_file_path, job, args.silent_children.unwrap_or(false)),
+        Mode::RunTask {
+            task,
+            arguments,
+        } => run_task_mode(
+            project_file_path,
+            task,
+            arguments,
+            args.silent_children.unwrap_or(false),
+        ),
     }
 }
 
